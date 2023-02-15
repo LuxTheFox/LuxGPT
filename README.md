@@ -1,9 +1,9 @@
-# DiscordGPT
+# LuxGPT
  AI chat bot in Discord, Get normal, crazy and all the responses inbetween
 
 ### How to use
  - Download Deno: https://deno.land/
- - Download source code for DiscordGPT: https://github.com/LuxTheFox/DiscordGPT
+ - Download source code for LuxGPT: https://github.com/LuxTheFox/LuxGPT
  - Create `.env` with this format:
 	```php
 	DISCORD_TOKEN=EnterTokenHere #The Token to login with

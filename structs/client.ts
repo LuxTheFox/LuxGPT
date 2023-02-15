@@ -11,7 +11,7 @@ import {
   upsertGuildApplicationCommands,
   join,
   isAbsolute,
-  __dirname,
+  __dirname
 } from "../deps.ts";
 import { TCommand } from "./command.ts";
 
@@ -23,22 +23,36 @@ export class Client {
   }
 
   async LoadCommands(path: string, devGuild?: string) {
-    if (!isAbsolute(path)) path = join(__dirname, "..", path);
+    if (!isAbsolute(path)) path = join(__dirname, path);
     for (const file of Deno.readDirSync(path)) {
-      const command: TCommand = await import(join(path, file.name));
+      const command: TCommand = (await import('file://' + join(path, file.name))).default;
       this.commands.set(command.name, command);
+      console.log(`[INFO] Loaded command: ${command.name}`)
     }
-
-    devGuild
-      ? upsertGuildApplicationCommands(
+    
+    try {
+      devGuild
+        ? await upsertGuildApplicationCommands(
           this.Bot,
           devGuild,
           Array.from(this.commands.values())
         )
-      : upsertGlobalApplicationCommands(
+        : await upsertGlobalApplicationCommands(
           this.Bot,
           Array.from(this.commands.values())
         );
+
+        console.log('[SUCCESS] Uploaded all loaded commands');
+    } catch {
+      console.log('[ERROR] Failed to upload commands');
+    }
+
+    this.OnCommandUsed((_bot, command, interaction) => {
+      command.execute({
+        client: this,
+        interaction: interaction
+      });
+    })
   }
 
   OnMessageCreate(cb: (bot: Bot, message: Message) => unknown) {
@@ -48,11 +62,15 @@ export class Client {
     this.Bot.events.interactionCreate = cb;
   }
 
-  OnCommandUsed(cb: (bot: Bot, interaction: Interaction) => unknown) {
+  OnCommandUsed(cb: (bot: Bot, command: TCommand, interaction: Interaction) => unknown) {
     this.Bot.events.interactionCreate = (bot: Bot, interaction: Interaction) => {
+      if (!interaction.guildId) return;
       if (interaction.type != InteractionTypes.ApplicationCommand) return;
 
-      cb(bot, interaction);
+      const command = this.commands.get(interaction.data?.name ?? '');
+      if (!command) return;
+
+      cb(bot, command, interaction);
     }
   }
 

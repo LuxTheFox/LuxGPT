@@ -1,20 +1,18 @@
 import {
   CreateSlashApplicationCommand,
   Interaction,
-  InteractionDataOption,
   PermissionStrings,
 } from "../deps.ts";
-import { client } from "./client.ts";
+import { Client } from "./client.ts";
 
 interface IExecuteFunction {
-  client: client;
+  client: Client;
   interaction: Interaction;
-  options: InteractionDataOption[];
 }
 
 export type TCommand = {
   usage: string;
-  requiredUserPermissions: PermissionStrings[];
+  requiredUserPermissions?: PermissionStrings[];
   execute: (data: IExecuteFunction) => unknown;
 } & CreateSlashApplicationCommand;
 
