@@ -19,16 +19,18 @@ const client = new Client({
 });
 
 client.Bot.events.ready = async() => {
-    console.log(`[SUCCESS] Logged in as: ${(await getUser(client.Bot, client.Bot.id)).username}`)
-    sendMessage(client.Bot, channelID, {
+    console.log(`[SUCCESS] Logged in as: ${(await getUser(client.Bot, client.Bot.id)).username}`);
+
+    await client.LoadCommands('commands', guildID);
+    await sendMessage(client.Bot, channelID, {
         embeds: [{
-            description: 'DiscordGPT is now online!',
+            title: 'DiscordGPT is now online!',
+            description: 'Use ! and ill ignore the message.\n!clear to clear my memories of you',
             color: parseInt('#222244'.replace("#", ""), 16),
             timestamp: Date.now()
         }]
-    });
+    }).catch(() => console.log(`[ERROR] Failed to send welcome message`));
 
-    client.LoadCommands('commands', guildID)
     startAI(client, channelID);
 };
 

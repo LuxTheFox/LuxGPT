@@ -52,7 +52,8 @@ export class Client {
         client: this,
         interaction: interaction
       });
-    })
+    });
+    return;
   }
 
   OnMessageCreate(cb: (bot: Bot, message: Message) => unknown) {

@@ -71,9 +71,7 @@ let requestOptions: JobCreateRequest = {
 			5
 		]
 	},
-	"models": [
-		"KoboldAI/OPT-6.7B-Erebus"
-	],
+	"models": [],
 	"workers": []
 }
 
