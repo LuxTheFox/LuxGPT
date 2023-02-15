@@ -1,4 +1,4 @@
 .env
 .vscode
 .vsc
-.db
+*.db
