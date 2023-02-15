@@ -7,6 +7,7 @@
  - Create `.env` with this format:
 	```php
 	DISCORD_TOKEN=EnterTokenHere #The Token to login with
+	GUILD_ID=EnterGuildIDHere #The guild to load the commands too
 	CHANNEL_ID=EnterChannelIDHere #The bots active channel
 	KOBOLD_KEY=0000000000 # The API key, Default: 0000000000
 	```

@@ -22,8 +22,8 @@ client.Bot.events.ready = async() => {
     console.log(`[SUCCESS] Logged in as: ${(await getUser(client.Bot, client.Bot.id)).username}`)
     sendMessage(client.Bot, channelID, {
         embeds: [{
-            color: parseInt('#222244'.replace("#", ""), 16) ,
             description: 'DiscordGPT is now online!',
+            color: parseInt('#222244'.replace("#", ""), 16),
             timestamp: Date.now()
         }]
     });
