@@ -6,15 +6,30 @@ import {
     checkJob,
     getJobStatus
 } from "./kobold.ts";
-import { deleteMessage, getGuild, getMember, getUser, sendMessage } from "./deps.ts";
+import { deleteMessage, getChannel, getGuild, getMember, getUser, sendMessage } from "./deps.ts";
+
+const channelID = Deno.env.get("CHANNEL_ID");
+if (!channelID) throw new Error("[DiscordGPT] Please provide a 'CHANNEL_ID' inside the '.env' file.")
+const token = Deno.env.get("DISCORD_TOKEN");
+if (!token) throw new Error("[DiscordGPT] Please provide a 'DISCORD_TOKEN' inside the '.env' file.")
+const _apikey = Deno.env.get("KOBOLD_KEY");
+if (!_apikey) throw new Error("[DiscordGPT] Please provide a 'KOBOLD_KEY' inside the '.env' file.\nIf you do not have a key provide the key: 0000000000")
 
 const client = new Client({
-    token: Deno.env.get("DISCORD_TOKEN") || '',
+    token: token || '',
     intents: 37377,
 });
 
 client.Login()
-    .then(async() => console.log(`[SUCCESS] Logged in as: ${(await getUser(client.Bot, client.Bot.id)).username}`))
+    .then(async() => {
+        console.log(`[SUCCESS] Logged in as: ${(await getUser(client.Bot, client.Bot.id)).username}`)
+        sendMessage(client.Bot, channelID, {
+            embeds: [{
+                description: 'DiscordGPT is now online!',
+                timestamp: Date.now()
+            }]
+        });
+    });
 
 const messageHistory: [string, string][] = [];
 const getContext = () => `This is a conversation between multiple [user#id]'s and [robot].
@@ -24,7 +39,7 @@ ${messageHistory.map(x => `[${x[0]}]: ${x[1]}`).join('\n')}
 [robot]:`
 
 client.OnMessageCreate(async(_bot, message) => {
-    if (message.channelId.toString() != Deno.env.get("CHANNEL_ID")
+    if (message.channelId.toString() != channelID
     || !message.content
     || !message.guildId
     || message.isFromBot) return;
@@ -34,7 +49,6 @@ client.OnMessageCreate(async(_bot, message) => {
 
     const guild = await getGuild(client.Bot, message.guildId)
     const user = await getUser(client.Bot, message.authorId)
-    console.log(`[INFO] [${guild.name}] Received messaged "${message.content}" from "${user.username}"`)
 
     messageHistory.push([`${member.username}#${member.discriminator}`, message.content]);
         
