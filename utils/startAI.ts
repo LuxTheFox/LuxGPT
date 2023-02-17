@@ -1,10 +1,10 @@
 import { Client } from "../structs/client.ts";
 import { createJob, checkJob, getJobStatus } from "../structs/kobold.ts";
-import { addReaction, deleteMessage, getGuild, getMember, getUser, sendMessage } from "../deps.ts";
+import { addReaction, deleteMessage, getGuild, getMember, getUser, sendMessage, deleteOwnReaction } from "../deps.ts";
 import { usersDB } from "./database.ts";
 
 const MemoryCapacity = 8;
-let MessageMemories: {[x: string]: [string, string][]} = {};
+const MessageMemories: {[x: string]: [string, string][]} = {};
 
 export function getMemory() {
     return MessageMemories;
@@ -12,10 +12,10 @@ export function getMemory() {
 
 export function startAI(client: Client, channelID: string) {
     const getContext = (userID: string) => `This is a conversation between multiple [user#id]'s and [robot].
-    You are [robot].
+You are [robot].
 
-    ${MessageMemories[userID].map(x => `[${x[0]}]: ${x[1]}`).join('\n')}
-    [robot]:`
+${MessageMemories[userID].map(x => `[${x[0]}]: ${x[1]}`).join('\n')}
+[robot]:`
 
     client.OnMessageCreate(async(_bot, message) => {
         if (!(await usersDB.getUsers()).includes(message.authorId.toString()))
@@ -47,6 +47,7 @@ export function startAI(client: Client, channelID: string) {
             const createdJob = await createJob(getContext(message.authorId.toString()));
             console.log(`[INFO] [${guild.name}] Created job for message "${message.content}" from "${user.username}"`);
             let intervalID = 0;
+            await addReaction(client.Bot, message.channelId, message.id,  '🤔');
             intervalID = setInterval(async() => {
                 const jobCheck = await checkJob(createdJob.id);
                 if (jobCheck.done == false) return;
@@ -54,14 +55,19 @@ export function startAI(client: Client, channelID: string) {
                 console.log(`[INFO] [${guild.name}] Got response for message "${message.content}" from "${user.username}"`);
                 if (jobStatus.done == false || jobStatus.generations.length == 0) throw new Error("INVALID_RESPONSE");
                 clearInterval(intervalID);
+                await deleteOwnReaction(client.Bot, message.channelId, message.id, '🤔');
                 await sendMessage(client.Bot, message.channelId, {  
                     content: jobStatus.generations[0].text.trim().split('\n')[0] ?? '.',
                     messageReference: {
+                        failIfNotExists: false,
                         channelId: message.channelId,
                         guildId: message.guildId,
-                        messageId: message.id,
-                        failIfNotExists: false
+                        messageId: message.id
                     }
+                }).catch(async() => {
+                    await sendMessage(client.Bot, message.channelId, {  
+                        content: jobStatus.generations[0].text.trim().split('\n')[0] ?? '.'
+                    })
                 });
                 if (MessageMemories[message.authorId.toString()].length >= MemoryCapacity) MessageMemories[message.authorId.toString()].splice(0, 1);
                 MessageMemories[message.authorId.toString()].push(["robot", jobStatus.generations[0].text.trim().split('\n')[0] ?? '.'])

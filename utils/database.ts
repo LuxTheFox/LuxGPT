@@ -34,7 +34,7 @@ class Database {
             if (index == -1) throw new Error();
 
             users.splice(index, 1);
-            await Deno.writeTextFile(this.name, users.join('\n') + (users.length == 0) ? '':'\n');
+            await Deno.writeTextFile(this.name, `${users.join('\n')}${(users.length == 0) ? '':'\n'}`);
         } catch {
             return undefined;
         }
