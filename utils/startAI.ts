@@ -45,6 +45,8 @@ ${MessageMemories[userID].map(x => `[${x[0]}]: ${x[1]}`).join('\n')}
         MessageMemories[message.authorId.toString()].push([`${member.username}#${member.discriminator}`, message.content]);
         try {
             const createdJob = await createJob(getContext(message.authorId.toString()));
+            if (createdJob.message && createdJob.message.toLowerCase().includes('horde has entered maintenance mode'))
+                throw new Error("API is currently offline, Please try again later");
             console.log(`[INFO] [${guild.name}] Created job for message "${message.content}" from "${user.username}"`);
             let intervalID = 0;
             await addReaction(client.Bot, message.channelId, message.id,  '🤔');
@@ -74,6 +76,7 @@ ${MessageMemories[userID].map(x => `[${x[0]}]: ${x[1]}`).join('\n')}
 
             }, 2000)
         } catch(err) {
+            if (`${err}`.toLowerCase().includes('api is currently offline')) throw err
             const sentMessage = await sendMessage(client.Bot, message.channelId, {
                 content: `<@${message.authorId}> [System] Internal error, Please retry\nError: ${err}`
             });
